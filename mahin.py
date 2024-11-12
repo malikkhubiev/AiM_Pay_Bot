@@ -4,6 +4,8 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import NoResultFound
+from datetime import datetime
 from config import (
     API_TOKEN,
     COURSE_AMOUNT,
@@ -18,6 +20,7 @@ from config import (
 from database import (
     engine,
     User,
+    Payout
 )
 import requests
 
@@ -146,13 +149,15 @@ async def process_payment(message: types.Message):
     description = "Оплата курса"
     
     with Session() as session:
-        user = session.query(User).filter_by(telegram_id=telegram_id).first()
-        if not user:
+        try:
+            user = session.query(User).filter_by(telegram_id=telegram_id).one()
+        except NoResultFound:
             await message.answer("Сначала нажмите /start для регистрации.")
             return
 
-        # Проверка, что пользователю уже не была начислена выплата
-        if user.payment_status == 'paid':
+        # Проверка, что у пользователя уже есть выплата с подтвержденным статусом
+        existing_payout = session.query(Payout).filter_by(user_id=user.id, notified=False).first()
+        if existing_payout:
             await message.answer("Вы уже оплатили курс.")
             return
 
@@ -169,6 +174,11 @@ async def process_payment(message: types.Message):
             payment_url = payment_response.get('confirmation', {}).get('confirmation_url')
             
             if payment_url:
+                # Создаем запись в таблице Payout с состоянием "ожидает уведомления"
+                payout = Payout(user_id=user.id, amount=amount, created_at=datetime.utcnow(), notified=False)
+                session.add(payout)
+                session.commit()
+                
                 # Отправляем пользователю ссылку для перехода на страницу оплаты
                 await message.answer(f"Для оплаты курса, перейдите по ссылке: {payment_url}")
             else:

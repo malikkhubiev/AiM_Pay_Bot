@@ -24,13 +24,16 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, nullable=False)
     telegram_id = Column(String, unique=True, nullable=False)
-    referral_count = Column(Integer, default=0)
     referrer_id = Column(Integer, ForeignKey('users.id'), nullable=True)
 
-    referrer = relationship("User", remote_side=[id], backref="referrals")
-    payouts = relationship("Payout", back_populates="user")
-    referred_users = relationship("Referral", back_populates="referred_user")
+    # Связь с реферером (пользователем, который пригласил этого пользователя)
+    referrer = relationship("User", remote_side=[id], backref="referrals", foreign_keys=[referrer_id])
+
+    # Связь с рефералами через таблицу Referral
+    referred_users = relationship("Referral", back_populates="referrer", foreign_keys="[Referral.referrer_id]")
     
+    payouts = relationship("Payout", back_populates="user")
+
     def __repr__(self):
         return f"<User(username='{self.username}', telegram_id='{self.telegram_id}')>"
 
@@ -42,8 +45,11 @@ class Referral(Base):
     referred_id = Column(Integer, ForeignKey('users.id'))
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    referrer = relationship("User", foreign_keys=[referrer_id], backref="referred_users")
-    referred_user = relationship("User", foreign_keys=[referred_id], backref="referrals")
+    # Связь с реферером (пользователем, который пригласил этого пользователя)
+    referrer = relationship("User", foreign_keys=[referrer_id], back_populates="referred_users")
+    
+    # Связь с приглашаемым пользователем
+    referred_user = relationship("User", foreign_keys=[referred_id], backref="referred_by")
 
 class Payout(Base):
     __tablename__ = 'payouts'
@@ -87,11 +93,6 @@ def create_referral(session: Session, referrer_id: int, referred_id: int):
     referral = Referral(referrer_id=referrer_id, referred_id=referred_id)
     session.add(referral)
     
-    # Обновляем количество рефералов у реферера
-    referrer = session.query(User).filter_by(id=referrer_id).first()
-    if referrer:
-        referrer.referral_count += 1
-        session.commit()
-    
+    # Здесь мы не обновляем 'referral_count', так как его больше нет
     session.commit()
     return referral
