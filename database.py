@@ -29,7 +29,8 @@ class User(Base):
 
     referrer = relationship("User", remote_side=[id], backref="referrals")
     payouts = relationship("Payout", back_populates="user")
-
+    referred_users = relationship("Referral", back_populates="referred_user")
+    
     def __repr__(self):
         return f"<User(username='{self.username}', telegram_id='{self.telegram_id}')>"
 
@@ -42,7 +43,7 @@ class Referral(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     referrer = relationship("User", foreign_keys=[referrer_id], backref="referred_users")
-    referred_user = relationship("User", foreign_keys=[referred_id])
+    referred_user = relationship("User", foreign_keys=[referred_id], backref="referrals")
 
 class Payout(Base):
     __tablename__ = 'payouts'
@@ -80,3 +81,17 @@ def mark_payout_as_notified(session: Session, payout_id: int):
     if payout:
         payout.notified = True
         session.commit()
+
+def create_referral(session: Session, referrer_id: int, referred_id: int):
+    """Создание записи в таблице Referral (реферал)"""
+    referral = Referral(referrer_id=referrer_id, referred_id=referred_id)
+    session.add(referral)
+    
+    # Обновляем количество рефералов у реферера
+    referrer = session.query(User).filter_by(id=referrer_id).first()
+    if referrer:
+        referrer.referral_count += 1
+        session.commit()
+    
+    session.commit()
+    return referral
