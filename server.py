@@ -40,7 +40,7 @@ async def create_payment(amount: float, description: str):
         },
         "confirmation": {
             "type": "redirect",
-            "return_url": "https://your_return_url.com"
+            "return_url": "https://web.telegram.org/a/#7859098027"
         },
         "capture": True,
         "description": description

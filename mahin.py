@@ -21,7 +21,7 @@ from database import (
 )
 import requests
 
-API_URL = "http://127.0.0.1:8000"  # Адрес API FastAPI
+API_URL = "https://aim-pay-bot.onrender.com"  # Адрес API FastAPI
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -162,7 +162,7 @@ async def process_payment(message: types.Message):
             "description": description,
             "telegram_id": telegram_id
         }
-        response = requests.post("http://127.0.0.1:8000/pay", json=payment_data)  # URL вашего FastAPI сервера
+        response = requests.post(API_URL + "/pay", json=payment_data)  # URL вашего FastAPI сервера
         
         if response.status_code == 200:
             payment_response = response.json()
