@@ -48,13 +48,14 @@ nest_asyncio.apply()
 def web_server():
     async def handle(request):
         # Проверка типа запроса
-        if request.method == "HEAD":
-            response_data = {"message": "pong"}
-            headers = {"Content-Type": "application/json;"}
-            return web.json_response(response_data, headers=headers)
+        response_data = {"message": "pong"}
+        headers = {"Content-Type": "application/json;"}
+        return web.json_response(response_data, headers=headers)
+            
 
     app = web.Application()
     app.router.add_route("HEAD", "/", handle)
+    app.router.add_route("GET", "/", handle)
     return app
 
 async def on_start_polling():
