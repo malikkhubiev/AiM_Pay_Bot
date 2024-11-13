@@ -113,7 +113,7 @@ async def db_session_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def payment_notification(request: Request):
     return JSONResponse(content={"message": "Супер"}, status_code=200, headers={"Content-Type": "application/json; charset=utf-8"})
 
