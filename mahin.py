@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
@@ -17,8 +18,7 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
     START_VIDEO_URL,
     REPORT_VIDEO_URL,
-    REFERRAL_VIDEO_URL,
-    PORT
+    REFERRAL_VIDEO_URL
 )
 from database import (
     engine,
@@ -56,6 +56,7 @@ async def on_start_polling():
     
     # Привязка адреса и порт
     bind_address = "0.0.0.0"
+    PORT = int(os.getenv("PORT", 8080))
     site = web.TCPSite(app, bind_address, PORT)
     await site.start()
     
