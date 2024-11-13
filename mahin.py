@@ -24,6 +24,8 @@ from database import (
     Payout,
 )
 import requests
+import uvicorn
+from fastapi import FastAPI
 
 API_URL = "https://aim-pay-bot.onrender.com"  # Адрес API FastAPI
 
@@ -36,8 +38,26 @@ Session = sessionmaker(bind=engine)
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
+# Создаем FastAPI-приложение
+app = FastAPI()
+
+# Добавляем простой роут для проверки
+@app.get("/")
+async def read_root():
+    return {"message": "FastAPI is running with bot"}
+
+# Функция для запуска aiogram polling
+async def start_bot():
+    executor.start_polling(dp, skip_updates=True)
+
+# Основная асинхронная функция
+async def main():
+    # Запуск бота и FastAPI в параллельных задачах
+    bot_task = asyncio.create_task(start_bot())
+    uvicorn_task = asyncio.create_task(uvicorn.run(app, host="0.0.0.0", port=10000))
+    await asyncio.gather(bot_task, uvicorn_task)
+
 # Главное меню с кнопками
-@dp.message_handler(commands=['start'])
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     telegram_id = str(message.from_user.id)
@@ -245,5 +265,4 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 
 if __name__ == '__main__':
-    from aiogram import executor
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
