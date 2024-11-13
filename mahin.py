@@ -48,14 +48,12 @@ nest_asyncio.apply()
 def web_server():
     async def handle(request):
         # Проверка типа запроса
-        if request.method == "HEAD" or request.method == "GET":
+        if request.method == "HEAD":
             response_data = {"message": "Бот и веб-сервер работают!"}
             headers = {"Content-Type": "application/json; charset=utf-8"}
             return web.json_response(response_data, headers=headers)
 
     app = web.Application()
-    # Обработка GET и HEAD запросов по маршруту "/"
-    app.router.add_route("GET", "/", handle)
     app.router.add_route("HEAD", "/", handle)
     return app
 
