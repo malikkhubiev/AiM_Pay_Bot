@@ -41,29 +41,30 @@ Session = sessionmaker(bind=engine)
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
 
+# Определение веб-сервера
 def web_server():
-    def handle(request):
+    async def handle(request):
         return web.Response(text="Бот и веб-сервер работают!")
 
     app = web.Application()
     app.router.add_get("/", handle)
     return app
 
-def start_services():
+async def on_start_polling():
     # Настройка веб-сервера с использованием aiohttp
     app = web.AppRunner(web_server())
-    asyncio.run(app.setup())
-    
+    await app.setup()
+
     # Привязка адреса и порта
     bind_address = "0.0.0.0"
     PORT = int(os.getenv("PORT", 8080))
     site = web.TCPSite(app, bind_address, PORT)
-    asyncio.run(site.start())
-    
+    await site.start()
+
     logging.info(f"Веб-сервер запущен на порту {PORT}")
 
     # Запуск бота с ожиданием завершения
-    executor.start_polling(dp, skip_updates=True)
+    await executor.start_polling(dp, skip_updates=True)
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
@@ -272,4 +273,5 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    start_services()
+    import asyncio
+    asyncio.run(on_start_polling())
