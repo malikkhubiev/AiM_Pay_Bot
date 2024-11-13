@@ -61,11 +61,8 @@ async def on_start():
     
     logging.info(f"Веб-сервер запущен на порту {PORT}")
 
-    # Запуск бота
-    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))
-    
-    # Ожидание завершения задач
-    await bot_task
+    # Запуск бота с ожиданием завершения
+    await executor.start_polling(dp, skip_updates=True)
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
