@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 from datetime import datetime
 from aiohttp import web
-from server import run_fastapi
+import nest_asyncio
 from config import (
     API_TOKEN,
     COURSE_AMOUNT,
@@ -40,6 +40,9 @@ Session = sessionmaker(bind=engine)
 
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
+
+# Применяем nest_asyncio для повторного использования цикла событий
+nest_asyncio.apply()
 
 # Определение веб-сервера
 def web_server():
