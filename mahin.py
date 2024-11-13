@@ -49,21 +49,21 @@ async def web_server():
     app.router.add_get("/", handle)
     return app
 
-async def on_start_polling():
+def on_start_polling():
     # Настройка веб-сервера с использованием aiohttp
-    app = web.AppRunner(await web_server())
-    await app.setup()
+    app = web.AppRunner(web_server())
+    app.setup()
     
     # Привязка адреса и порт
     bind_address = "0.0.0.0"
     PORT = int(os.getenv("PORT", 8080))
     site = web.TCPSite(app, bind_address, PORT)
-    await site.start()
+    site.start()
     
     logging.info(f"Веб-сервер запущен на порту {PORT}")
 
     # Запуск бота с ожиданием завершения
-    await executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True)
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
@@ -273,4 +273,4 @@ async def send_referral_link(message: types.Message, telegram_id: str):
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(on_start_polling())
+    on_start_polling()
