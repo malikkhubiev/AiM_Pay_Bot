@@ -6,6 +6,7 @@ from aiogram.types import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 from datetime import datetime
+from aiohttp import web
 from config import (
     API_TOKEN,
     COURSE_AMOUNT,
@@ -38,24 +39,29 @@ Session = sessionmaker(bind=engine)
 # Логирование
 logging.basicConfig(level=logging.INFO)
 
-# Создаем FastAPI-приложение
-app = FastAPI()
-
-# Добавляем простой роут для проверки
-@app.get("/")
-async def read_root():
-    return {"message": "FastAPI is running with bot"}
-
-# Функция для запуска aiogram polling
+# Асинхронная функция для запуска aiogram бота
 async def start_bot():
     executor.start_polling(dp, skip_updates=True)
 
-# Основная асинхронная функция
+# Функция для запуска фиктивного веб-сервера
+async def handle(request):
+    return web.Response(text="Bot is running")
+
+# Главная асинхронная функция для запуска бота и веб-сервера
 async def main():
-    # Запуск бота и FastAPI в параллельных задачах
+    # Запускаем фиктивный веб-сервер
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 10000)
+    await site.start()
+
+    # Запускаем бота в параллельной задаче
     bot_task = asyncio.create_task(start_bot())
-    uvicorn_task = asyncio.create_task(uvicorn.run(app, host="0.0.0.0", port=10000))
-    await asyncio.gather(bot_task, uvicorn_task)
+
+    # Держим обе задачи запущенными
+    await bot_task
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
