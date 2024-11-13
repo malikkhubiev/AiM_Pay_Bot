@@ -272,4 +272,5 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    on_start_polling()
+    import asyncio
+    asyncio.run(on_start_polling())
