@@ -20,7 +20,8 @@ from config import (
 from database import (
     engine,
     User,
-    Payout
+    Referral,
+    Payout,
 )
 import requests
 
@@ -37,41 +38,52 @@ logging.basicConfig(level=logging.INFO)
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
+@dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     telegram_id = str(message.from_user.id)
     username = message.from_user.username or message.from_user.first_name
 
     with Session() as session:
+        # Проверка, зарегистрирован ли пользователь
         user = session.query(User).filter_by(telegram_id=telegram_id).first()
         if user:
             await message.answer(f"Привет, {username}! Я тебя знаю. Ты участник AiM course!")
         else:
+            # Регистрируем нового пользователя и добавляем реферера, если он есть
             referrer_id = message.get_args()
-            new_user = User(telegram_id=telegram_id, username=username, referrer_id=referrer_id if referrer_id else None)
+            new_user = User(
+                telegram_id=telegram_id,
+                username=username,
+                referrer_id=referrer_id if referrer_id else None
+            )
             session.add(new_user)
             session.commit()
             await message.answer(f"Добро пожаловать, {username}! Ты успешно зарегистрирован.")
             logging.info(f"Пользователь {username} зарегистрирован {'с реферальной ссылкой' if referrer_id else 'без реферальной ссылки'}.")
-    
-    # Основное меню с кнопками
+
+    # Создаем основное меню с кнопками
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(
         InlineKeyboardButton("Оплатить курс", callback_data='pay_course'),
     )
 
-    # Проверка оплаты через выплаты или рефералы
-    if user and user.referral_count > 0:  # Проверка наличия хотя бы одного реферала
-        keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
-    else:
-        keyboard.add(InlineKeyboardButton("Заработать на новых клиентах (нужно оплатить курс)", callback_data='earn_new_clients_disabled'))
+    # Проверка, есть ли хотя бы один реферал у пользователя
+    referral_exists = session.query(Referral).filter_by(referrer_id=user.id).first() if user else None
+    keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
+    # if referral_exists:
+    #     # Кнопка для заработка на клиентах, если есть хотя бы один реферал
+    #     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
+    # else:
+    #     # Кнопка, если пользователь еще не оплатил курс
+    #     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах (нужно оплатить курс)", callback_data='earn_new_clients_disabled'))
 
+    # Отправка видео с приветствием и меню
     await bot.send_video(
         chat_id=message.chat.id,
         video=START_VIDEO_URL,
         caption="Добро пожаловать! Здесь Вы можете оплатить курс и заработать на привлечении новых клиентов.",
         reply_markup=keyboard
     )
-
 
 @dp.callback_query_handler(lambda c: c.data == 'pay_course')
 async def process_pay_course(callback_query: types.CallbackQuery):
@@ -192,17 +204,22 @@ async def simulate_payment():
 
 
 @dp.message_handler(commands=['report'])
-async def generate_report(message: types.Message, telegram_id):
+async def generate_report(message: types.Message, telegram_id: str):
     with Session() as session:
         user = session.query(User).filter_by(telegram_id=telegram_id).first()
         if not user:
             await message.answer("Используй команду /start для регистрации.")
             return
 
+        # Подсчет рефералов для пользователя
+        referral_count = session.query(Referral).filter_by(referrer_id=user.id).count()
+        
         report = f"<b>Отчёт для {user.username}:</b>\n\n"
-        report += f"Привлечённые пользователи: {user.referral_count}\n"
+        report += f"Привлечённые пользователи: {referral_count}\n"
+        
+        # Подсчет общей суммы потенциальных выплат
         payout_per_referral = REFERRAL_AMOUNT
-        total_payout = user.referral_count * payout_per_referral
+        total_payout = referral_count * payout_per_referral
         report += f"Общая сумма потенциальных выплат: {total_payout} руб.\n\n"
 
         await bot.send_video(
@@ -214,14 +231,16 @@ async def generate_report(message: types.Message, telegram_id):
 
 
 @dp.message_handler(commands=['referral'])
-async def send_referral_link(message: types.Message, telegram_id):
+async def send_referral_link(message: types.Message, telegram_id: str):
     with Session() as session:
         user = session.query(User).filter_by(telegram_id=telegram_id).first()
         if not user:
             await message.answer("Используй команду /start для регистрации.")
             return
 
-        referral_link = f"https://t.me/{bot.username}?start={telegram_id}"
+        # Получение имени пользователя бота
+        bot_username = (await bot.get_me()).username
+        referral_link = f"https://t.me/{bot_username}?start={telegram_id}"
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 
