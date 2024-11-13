@@ -38,30 +38,24 @@ Session = sessionmaker(bind=engine)
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
-
-# Асинхронная функция для запуска aiogram бота
-async def start_bot():
-    executor.start_polling(dp, skip_updates=True)
-
-# Функция для запуска фиктивного веб-сервера
+# Простой фиктивный веб-сервер
 async def handle(request):
     return web.Response(text="Bot is running")
 
-# Главная асинхронная функция для запуска бота и веб-сервера
+# Создание веб-приложения
+app = web.Application()
+app.router.add_get("/", handle)
+
+# Запуск FastAPI и бота
 async def main():
-    # Запускаем фиктивный веб-сервер
-    app = web.Application()
-    app.router.add_get("/", handle)
+    # Запуск фиктивного веб-сервера
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 10000)
+    site = web.TCPSite(runner, "0.0.0.0", 10000)  # Порт, который будет использовать Render
     await site.start()
 
-    # Запускаем бота в параллельной задаче
-    bot_task = asyncio.create_task(start_bot())
-
-    # Держим обе задачи запущенными
-    await bot_task
+    # Запуск бота (не вызываем asyncio.run() тут)
+    asyncio.create_task(executor.start_polling(dp, skip_updates=True))  # Запуск бота в том же цикле событий
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
