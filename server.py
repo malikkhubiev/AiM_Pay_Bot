@@ -117,5 +117,4 @@ async def payment_notification(request: Request):
     return {"message": "Супер"}
 
 async def run_fastapi():
-    # Запуск FastAPI приложения
     uvicorn.run(app, host="0.0.0.0", port=8000)

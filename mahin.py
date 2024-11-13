@@ -37,18 +37,13 @@ dp = Dispatcher(bot)
 # Создание сессии базы данных
 Session = sessionmaker(bind=engine)
 
-# Логирование
-logging.basicConfig(level=logging.INFO)
+# Установим базовый уровень логирования
+logging.basicConfig(level=logging.DEBUG)
 
 async def main():
-    # Запуск FastAPI сервера
-    fastapi_task = asyncio.create_task(run_fastapi())  
-
     # Запуск бота
-    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))  
+    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))
 
-    # Ожидаем завершения обеих задач (они будут работать параллельно)
-    await fastapi_task
     await bot_task
 
 # Главное меню с кнопками
@@ -258,5 +253,8 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    # Запуск main
-    asyncio.run(main())
+    try:
+        loop = asyncio.get_event_loop()
+        loop.create_task(main())  # Запуск main() в текущем цикле
+    except RuntimeError:
+        asyncio.run(main())  # В случае ошибки создаем новый цикл
