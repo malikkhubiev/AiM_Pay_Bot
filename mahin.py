@@ -49,7 +49,7 @@ async def web_server():
     app.router.add_get("/", handle)
     return app
 
-async def on_start():
+async def on_start_polling():
     # Настройка веб-сервера с использованием aiohttp
     app = web.AppRunner(await web_server())
     await app.setup()
@@ -271,4 +271,4 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    asyncio.run(on_start())
+    on_start_polling()
