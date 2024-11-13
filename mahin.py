@@ -49,16 +49,16 @@ def web_server():
     app.router.add_get("/", handle)
     return app
 
-def on_start_polling():
+def start_services():
     # Настройка веб-сервера с использованием aiohttp
     app = web.AppRunner(web_server())
-    app.setup()
+    asyncio.run(app.setup())
     
-    # Привязка адреса и порт
+    # Привязка адреса и порта
     bind_address = "0.0.0.0"
     PORT = int(os.getenv("PORT", 8080))
     site = web.TCPSite(app, bind_address, PORT)
-    site.start()
+    asyncio.run(site.start())
     
     logging.info(f"Веб-сервер запущен на порту {PORT}")
 
@@ -272,5 +272,4 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    import asyncio
-    on_start_polling()
+    start_services()
