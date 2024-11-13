@@ -50,7 +50,7 @@ def web_server():
         # Проверка типа запроса
         if request.method == "HEAD":
             response_data = {"message": "pong"}
-            headers = {"Content-Type": "application/json; charset=utf-8"}
+            headers = {"Content-Type": "application/json;"}
             return web.json_response(response_data, headers=headers)
 
     app = web.Application()
