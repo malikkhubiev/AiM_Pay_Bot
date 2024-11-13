@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import NoResultFound
 from datetime import datetime
 from aiohttp import web
+from server import run_fastapi
 from config import (
     API_TOKEN,
     COURSE_AMOUNT,
@@ -38,24 +39,17 @@ Session = sessionmaker(bind=engine)
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
-# Простой фиктивный веб-сервер
-async def handle(request):
-    return web.Response(text="Bot is running")
 
-# Создание веб-приложения
-app = web.Application()
-app.router.add_get("/", handle)
-
-# Запуск FastAPI и бота
 async def main():
-    # Запуск фиктивного веб-сервера
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 10000)  # Порт, который будет использовать Render
-    await site.start()
+    # Запуск FastAPI сервера
+    fastapi_task = asyncio.create_task(run_fastapi())  
 
-    # Запуск бота (не вызываем asyncio.run() тут)
-    asyncio.create_task(executor.start_polling(dp, skip_updates=True))  # Запуск бота в том же цикле событий
+    # Запуск бота
+    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))  
+
+    # Ожидаем завершения обеих задач (они будут работать параллельно)
+    await fastapi_task
+    await bot_task
 
 # Главное меню с кнопками
 @dp.message_handler(commands=['start'])
@@ -263,6 +257,6 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         referral_link = f"https://t.me/{bot_username}?start={telegram_id}"
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Запуск main
     asyncio.run(main())

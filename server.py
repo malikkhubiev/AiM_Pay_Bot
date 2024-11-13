@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from config import (REFERRAL_AMOUNT)
 import os
 import aiohttp
+import uvicorn
 from database import get_db, create_payout, get_user, mark_payout_as_notified, create_referral
 
 load_dotenv()
@@ -115,10 +116,6 @@ async def db_session_middleware(request: Request, call_next):
 async def payment_notification(request: Request):
     return {"message": "Супер"}
 
-if __name__ == "__main__":
-    import uvicorn
-    import os
-
-    # Получаем порт из переменной окружения
-    port = int(os.getenv("PORT", 8000))  # 8000 - порт по умолчанию
-    uvicorn.run(app, host="0.0.0.0", port=port)
+async def run_fastapi():
+    # Запуск FastAPI приложения
+    uvicorn.run(app, host="0.0.0.0", port=8000)
