@@ -117,4 +117,5 @@ async def payment_notification(request: Request):
     return {"message": "Супер"}
 
 async def run_fastapi():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))  # Порт будет извлечен из окружения или 8000 по умолчанию
+    uvicorn.run(app, host="0.0.0.0", port=port)

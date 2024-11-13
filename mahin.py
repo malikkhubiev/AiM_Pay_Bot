@@ -42,8 +42,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def main():
     # Запуск бота
+    fastapi_task = asyncio.create_task(run_fastapi())
     bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))
 
+    await fastapi_task
     await bot_task
 
 # Главное меню с кнопками
