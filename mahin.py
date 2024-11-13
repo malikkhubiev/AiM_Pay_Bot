@@ -41,8 +41,8 @@ Session = sessionmaker(bind=engine)
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
 
-async def web_server():
-    async def handle(request):
+def web_server():
+    def handle(request):
         return web.Response(text="Бот и веб-сервер работают!")
 
     app = web.Application()
