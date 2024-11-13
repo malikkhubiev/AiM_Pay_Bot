@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
@@ -114,7 +115,7 @@ async def db_session_middleware(request: Request, call_next):
 
 @app.get("/")
 async def payment_notification(request: Request):
-    return {"message": "Супер"}
+    return JSONResponse(content={"message": "Супер"}, status_code=200)
 
 async def run_fastapi():
     port = int(os.getenv("PORT", 8000))  # Порт будет извлечен из окружения или 8000 по умолчанию
