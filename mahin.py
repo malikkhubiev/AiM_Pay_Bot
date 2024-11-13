@@ -50,7 +50,8 @@ def web_server():
         # Проверка типа запроса
         if request.method == "HEAD" or request.method == "GET":
             response_data = {"message": "Бот и веб-сервер работают!"}
-            return web.json_response(response_data)
+            headers = {"Content-Type": "application/json; charset=utf-8"}
+            return web.json_response(response_data, headers=headers)
 
     app = web.Application()
     # Обработка GET и HEAD запросов по маршруту "/"
