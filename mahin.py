@@ -49,7 +49,7 @@ def web_server():
     async def handle(request):
         # Проверка типа запроса
         response_data = {"message": "pong"}
-        headers = {"Content-Type": "application/json;"}
+        headers = {"Content-Type": "application/json; charset=utf-8"}
         return web.json_response(response_data, headers=headers)
             
 
