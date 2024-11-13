@@ -115,7 +115,7 @@ async def db_session_middleware(request: Request, call_next):
 
 @app.get("/")
 async def payment_notification(request: Request):
-    return JSONResponse(content={"message": "Супер"}, status_code=200)
+    return JSONResponse(content={"message": "Супер"}, status_code=200, headers={"Content-Type": "application/json; charset=utf-8"})
 
 async def run_fastapi():
     port = int(os.getenv("PORT", 8000))  # Порт будет извлечен из окружения или 8000 по умолчанию
