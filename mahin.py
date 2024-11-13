@@ -17,7 +17,8 @@ from config import (
     EARN_NEW_CLIENTS_VIDEO_URL,
     START_VIDEO_URL,
     REPORT_VIDEO_URL,
-    REFERRAL_VIDEO_URL
+    REFERRAL_VIDEO_URL,
+    PORT
 )
 from database import (
     engine,
@@ -40,11 +41,30 @@ Session = sessionmaker(bind=engine)
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
 
-async def main():
-    # fastapi_task = asyncio.create_task(run_fastapi())
-    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))
+async def web_server():
+    async def handle(request):
+        return web.Response(text="Бот и веб-сервер работают!")
 
-    # await fastapi_task
+    app = web.Application()
+    app.router.add_get("/", handle)
+    return app
+
+async def on_start():
+    # Настройка веб-сервера с использованием aiohttp
+    app = web.AppRunner(await web_server())
+    await app.setup()
+    
+    # Привязка адреса и порт
+    bind_address = "0.0.0.0"
+    site = web.TCPSite(app, bind_address, PORT)
+    await site.start()
+    
+    logging.info(f"Веб-сервер запущен на порту {PORT}")
+
+    # Запуск бота
+    bot_task = asyncio.create_task(executor.start_polling(dp, skip_updates=True))
+    
+    # Ожидание завершения задач
     await bot_task
 
 # Главное меню с кнопками
@@ -254,8 +274,4 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         await message.answer(f"Твоя реферальная ссылка: {referral_link}")
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_event_loop()
-        loop.create_task(main())  # Запуск main() в текущем цикле
-    except RuntimeError:
-        asyncio.run(main())  # В случае ошибки создаем новый цикл
+    asyncio.run(on_start())
