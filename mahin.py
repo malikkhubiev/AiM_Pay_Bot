@@ -47,10 +47,15 @@ nest_asyncio.apply()
 # Определение веб-сервера
 def web_server():
     async def handle(request):
-        return web.Response(text="Бот и веб-сервер работают!")
+        # Проверка типа запроса
+        if request.method == "HEAD" or request.method == "GET":
+            response_data = {"message": "Бот и веб-сервер работают!"}
+            return web.json_response(response_data)
 
     app = web.Application()
-    app.router.add_get("/", handle)
+    # Обработка GET и HEAD запросов по маршруту "/"
+    app.router.add_route("GET", "/", handle)
+    app.router.add_route("HEAD", "/", handle)
     return app
 
 async def on_start_polling():
