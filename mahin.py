@@ -196,6 +196,7 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 """
     await callback_query.message.answer(info_text, parse_mode=ParseMode.HTML)
 
+logger = logging.getLogger(__name__)
 
 @dp.message_handler(commands=['pay'])
 async def process_payment(message: types.Message):
@@ -203,16 +204,21 @@ async def process_payment(message: types.Message):
     amount = COURSE_AMOUNT
     description = "Оплата курса"
     
+    logger.info("Начало обработки платежа для пользователя с Telegram ID: %s", telegram_id)
+    
     with Session() as session:
         try:
             user = session.query(User).filter_by(telegram_id=telegram_id).one()
+            logger.info("Пользователь найден в базе данных: %s", user)
         except NoResultFound:
+            logger.warning("Пользователь не зарегистрирован, запрос /pay отклонён.")
             await message.answer("Сначала нажмите /start для регистрации.")
             return
 
         # Проверка, что у пользователя уже есть выплата с подтвержденным статусом
         existing_payout = session.query(Payout).filter_by(user_id=user.id, notified=False).first()
         if existing_payout:
+            logger.info("Пользователь с Telegram ID %s уже оплатил курс.", telegram_id)
             await message.answer("Вы уже оплатили курс.")
             return
 
@@ -222,13 +228,21 @@ async def process_payment(message: types.Message):
             "description": description,
             "telegram_id": telegram_id
         }
-        response = requests.post(SERVER_URL + "/pay", json=payment_data)  # URL вашего FastAPI сервера
         
+        try:
+            logger.info("Отправка запроса на сервер для создания платежа. Данные: %s", payment_data)
+            response = requests.post(SERVER_URL + "/pay", json=payment_data)
+        except requests.RequestException as e:
+            logger.error("Ошибка при отправке запроса на сервер: %s", e)
+            await message.answer("Ошибка при обработке платежа.")
+            return
+
         if response.status_code == 200:
             payment_response = response.json()
             payment_url = payment_response.get('confirmation', {}).get('confirmation_url')
             
             if payment_url:
+                logger.info("Платёж успешно создан. Confirmation URL: %s", payment_url)
                 # Создаем запись в таблице Payout с состоянием "ожидает уведомления"
                 payout = Payout(user_id=user.id, amount=amount, created_at=datetime.utcnow(), notified=False)
                 session.add(payout)
@@ -237,8 +251,10 @@ async def process_payment(message: types.Message):
                 # Отправляем пользователю ссылку для перехода на страницу оплаты
                 await message.answer(f"Для оплаты курса, перейдите по ссылке: {payment_url}")
             else:
+                logger.error("Ошибка: Confirmation URL отсутствует в ответе сервера.")
                 await message.answer("Ошибка при создании ссылки для оплаты.")
         else:
+            logger.error("Ошибка при обработке платежа на сервере. Код ответа: %s, Текст ошибки: %s", response.status_code, response.text)
             await message.answer("Ошибка при обработке платежа.")
 
 @dp.message_handler(commands=['report'])
