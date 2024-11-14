@@ -8,7 +8,7 @@ from config import (
     REFERRAL_AMOUNT,
     YOOKASSA_SECRET_KEY,
     MAHIN_URL,
-    YOO_KASSA_SHOP_ID
+    YOOKASSA_SHOP_ID
 )
 
 from yookassa import Payment, Configuration
@@ -20,11 +20,11 @@ from database import get_db, create_payout, get_user, mark_payout_as_notified, c
 
 load_dotenv()
 
-print("YOO_KASSA_SHOP_ID:", os.getenv("YOO_KASSA_SHOP_ID"))
+print("YOOKASSA_SHOP_ID:", os.getenv("YOOKASSA_SHOP_ID"))
 print("YOOKASSA_SECRET_KEY:", os.getenv("YOOKASSA_SECRET_KEY"))
 
 # Настройка идентификатора магазина и секретного ключа
-Configuration.account_id = YOO_KASSA_SHOP_ID
+Configuration.account_id = YOOKASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
 
 # Настроим логирование
