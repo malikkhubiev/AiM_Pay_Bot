@@ -28,7 +28,7 @@ Configuration.account_id = YOO_KASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
 
 # Настроим логирование
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Логируем, чтобы проверить, что переменные установлены
