@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import requests
 from config import (
     REFERRAL_AMOUNT,
-    YOO_KASSA_SECRET_KEY,
+    YOOKASSA_SECRET_KEY,
     MAHIN_URL,
     YOO_KASSA_SHOP_ID
 )
@@ -49,7 +49,7 @@ async def create_payment(amount: float, description: str, telegram_id: str):
     """Создание платежа в YooKassa."""
     url = "https://api.yookassa.ru/v3/payments"
     headers = {
-        "Authorization": f"Bearer {YOO_KASSA_SECRET_KEY}",
+        "Authorization": f"Bearer {YOOKASSA_SECRET_KEY}",
         "Content-Type": "application/json",
     }
     payment_data = {
@@ -82,7 +82,6 @@ async def create_payment(amount: float, description: str, telegram_id: str):
                     raise HTTPException(status_code=400, detail="No confirmation URL found")
             else:
                 raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {await response.text()}")
-
 
 @app.post("/payment_notification")
 async def payment_notification(request: Request, db: Session = Depends(get_db)):

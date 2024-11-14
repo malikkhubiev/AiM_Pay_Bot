@@ -19,7 +19,7 @@ LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")  # Уровень логир�
 
 # YooKassa configuration
 YOO_KASSA_SHOP_ID = os.getenv("YOO_KASSA_SHOP_ID")
-YOO_KASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
+YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
 TAX_INFO_IMG_URL = os.getenv("TAX_INFO_IMG_URL")
 EARN_NEW_CLIENTS_VIDEO_URL = os.getenv("EARN_NEW_CLIENTS_VIDEO_URL")
