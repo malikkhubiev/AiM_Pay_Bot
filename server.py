@@ -76,7 +76,7 @@ async def create_payment(amount: float, description: str, telegram_id: str):
         },
         "confirmation": {
             "type": "redirect",
-            "return_url": f"tg://resolve?domain=AiM_Pay_Bot"
+            "return_url": "https://t.me/AiM_Pay_Bot"
         },
         "capture": True,
         "description": description,
