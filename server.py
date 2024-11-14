@@ -3,17 +3,17 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from config import (REFERRAL_AMOUNT)
+from config import (
+    REFERRAL_AMOUNT,
+    YOO_KASSA_SECRET_KEY,
+    YOO_KASSA_SHOP_ID
+)
 import os
 import aiohttp
 import uvicorn
 from database import get_db, create_payout, get_user, mark_payout_as_notified, create_referral
 
 load_dotenv()
-
-# YooKassa configuration
-YOO_KASSA_SHOP_ID = os.getenv("YOO_KASSA_SHOP_ID")
-YOO_KASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
 # FastAPI application
 app = FastAPI()
