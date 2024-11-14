@@ -10,6 +10,8 @@ from config import (
     MAHIN_URL,
     YOO_KASSA_SHOP_ID
 )
+
+from yookassa import Payment, Configuration
 import logging
 import os
 import aiohttp
@@ -17,6 +19,10 @@ import uvicorn
 from database import get_db, create_payout, get_user, mark_payout_as_notified, create_referral
 
 load_dotenv()
+
+# Настройка идентификатора магазина и секретного ключа
+Configuration.account_id = YOO_KASSA_SHOP_ID
+Configuration.secret_key = YOOKASSA_SECRET_KEY
 
 # FastAPI application
 app = FastAPI()
@@ -55,15 +61,10 @@ async def pay(request: PaymentRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 async def create_payment(amount: float, description: str, telegram_id: str):
-    """Создание платежа в YooKassa."""
-    url = "https://api.yookassa.ru/v3/payments"
-    headers = {
-        "Authorization": f"Bearer {YOOKASSA_SECRET_KEY}",
-        "Content-Type": "application/json",
-    }
+    """Создание платежа в YooKassa с использованием yookassa SDK."""
     payment_data = {
         "amount": {
-            "value": f"{amount:.2f}",  # Форматируем сумму с двумя знаками после запятой
+            "value": f"{amount:.2f}",
             "currency": "RUB"
         },
         "confirmation": {
@@ -73,32 +74,28 @@ async def create_payment(amount: float, description: str, telegram_id: str):
         "capture": True,
         "description": description,
         "metadata": {
-            "telegram_id": telegram_id  # Добавляем ID пользователя для дальнейшей идентификации
+            "telegram_id": telegram_id
         }
     }
-
-    logger.info(headers["Authorization"])
-    logger.info("Отправка запроса на создание платежа в YooKassa для пользователя с Telegram ID: %s", telegram_id)
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payment_data) as response:
-            if response.status == 200:
-                payment_response = await response.json()
-                confirmation_url = payment_response.get('confirmation', {}).get('confirmation_url')
-                if confirmation_url:
-                    logger.info("Платеж успешно создан. Confirmation URL: %s", confirmation_url)
-                    return {
-                        'confirmation': {
-                            'confirmation_url': confirmation_url  # Возвращаем ссылку на страницу подтверждения
-                        }
-                    }
-                else:
-                    logger.error("Ошибка: Confirmation URL не найден в ответе от YooKassa.")
-                    raise HTTPException(status_code=400, detail="No confirmation URL found")
-            else:
-                error_text = await response.text()
-                logger.error("Ошибка при создании платежа. Код ответа: %s, Текст ошибки: %s", response.status, error_text)
-                raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {error_text}")
-            
+    
+    try:
+        logger.info("Отправка запроса на создание платежа для пользователя с Telegram ID: %s", telegram_id)
+        payment = Payment.create(payment_data)  # Создание платежа через yookassa SDK
+        confirmation_url = payment.confirmation.confirmation_url
+        if confirmation_url:
+            logger.info("Платеж успешно создан. Confirmation URL: %s", confirmation_url)
+            return {
+                'confirmation': {
+                    'confirmation_url': confirmation_url  # Возвращаем ссылку на страницу подтверждения
+                }
+            }
+        else:
+            logger.error("Ошибка: Confirmation URL не найден в ответе от YooKassa.")
+            raise HTTPException(status_code=400, detail="No confirmation URL found")
+    except Exception as e:
+        logger.error("Ошибка при создании платежа: %s", str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to create payment: {str(e)}")
+    
 @app.post("/payment_notification")
 async def payment_notification(request: Request, db: Session = Depends(get_db)):
     """Обработка уведомления о платеже от YooKassa."""
@@ -135,8 +132,10 @@ async def payment_notification(request: Request, db: Session = Depends(get_db)):
             response = requests.post(notify_url, json=notification_data)
 
             if response.status_code == 200:
+                logger.info("Пользователь с Telegram ID %s успешно уведомлен через бота.", user_telegram_id)
                 return {"message": "Payment processed and user notified successfully"}
             else:
+                logger.error("Ошибка при отправке уведомления пользователю через бота.")
                 raise HTTPException(status_code=500, detail="Failed to notify user through bot")
 
     raise HTTPException(status_code=400, detail="Payment not processed")
