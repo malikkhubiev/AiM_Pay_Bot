@@ -277,7 +277,11 @@ async def send_referral_link(message: types.Message, telegram_id: str):
         # Получение имени пользователя бота
         bot_username = (await bot.get_me()).username
         referral_link = f"https://t.me/{bot_username}?start={telegram_id}"
-        await message.answer(f"Твоя реферальная ссылка: {referral_link}")
+        await bot.send_video(
+            chat_id=message.chat.id,
+            video=REFERRAL_VIDEO_URL,
+            caption=f"Отправляю тебе реферальную ссылку:\n{referral_link}\nЗарабатывай, продвигая It - образование."
+        )
 
 if __name__ == "__main__":
     import asyncio
