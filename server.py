@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
@@ -8,6 +8,7 @@ from config import (
     REFERRAL_AMOUNT,
     YOOKASSA_SECRET_KEY,
     MAHIN_URL,
+    SERVER_URL,
     YOOKASSA_SHOP_ID
 )
 
@@ -76,7 +77,7 @@ async def create_payment(amount: float, description: str, telegram_id: str):
         },
         "confirmation": {
             "type": "redirect",
-            "return_url": "https://t.me/AiM_Pay_Bot"
+            "return_url": f"{SERVER_URL}/success"
         },
         "capture": True,
         "description": description,
@@ -146,6 +147,18 @@ async def payment_notification(request: Request, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=500, detail="Failed to notify user through bot")
 
     raise HTTPException(status_code=400, detail="Payment not processed")
+
+@app.get("/success", response_class=HTMLResponse)
+async def success():
+    """Возвращает страницу с сообщением об успешном выполнении"""
+    return """
+        <html>
+            <head><title>Success</title></head>
+            <body>
+                <h1>Все прошло успешно!</h1>
+            </body>
+        </html>
+    """
 
 # Database session dependency
 @app.middleware("http")
