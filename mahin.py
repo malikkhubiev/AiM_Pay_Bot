@@ -46,11 +46,22 @@ def web_server():
         # Проверка типа запроса
         response_data = {"message": "pong"}
         return web.json_response(response_data)
-            
+    
+    async def notify_user(request):
+        data = await request.json()
+        telegram_id = data.get("telegram_id")
+        message_text = data.get("message")
+
+        # Отправляем сообщение пользователю через Telegram
+        if telegram_id and message_text:
+            await bot.send_message(chat_id=telegram_id, text=message_text)
+            return web.json_response({"status": "notification sent"}, status=200)
+        return web.json_response({"error": "Invalid data"}, status=400)
 
     app = web.Application()
-    app.router.add_route("HEAD", "/", handle)
-    app.router.add_route("GET", "/", handle)
+    app.router.add_head("/", handle) # for UptimeRobot
+    app.router.add_get("/", handle) # for me
+    app.router.add_post("/notify_user", notify_user) # for success notifying
     return app
 
 async def on_start_polling():
@@ -189,7 +200,7 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 @dp.message_handler(commands=['pay'])
 async def process_payment(message: types.Message):
     telegram_id = str(message.from_user.id)
-    amount = COURSE_AMOUNT  # Сумма платежа
+    amount = COURSE_AMOUNT
     description = "Оплата курса"
     
     with Session() as session:
@@ -229,11 +240,6 @@ async def process_payment(message: types.Message):
                 await message.answer("Ошибка при создании ссылки для оплаты.")
         else:
             await message.answer("Ошибка при обработке платежа.")
-
-async def simulate_payment():
-    await asyncio.sleep(1)
-    return True
-
 
 @dp.message_handler(commands=['report'])
 async def generate_report(message: types.Message, telegram_id: str):

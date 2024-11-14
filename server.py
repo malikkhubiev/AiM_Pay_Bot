@@ -3,9 +3,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+import requests
 from config import (
     REFERRAL_AMOUNT,
     YOO_KASSA_SECRET_KEY,
+    MAHIN_URL,
     YOO_KASSA_SHOP_ID
 )
 import os
@@ -28,39 +30,6 @@ class PaymentRequest(BaseModel):
     description: str
     telegram_id: str
 
-async def create_payment(amount: float, description: str):
-    """Создание платежа в YooKassa."""
-    url = "https://api.yookassa.ru/v3/payments"
-    headers = {
-        "Authorization": f"Bearer {YOO_KASSA_SECRET_KEY}",
-        "Content-Type": "application/json",
-    }
-    payment_data = {
-        "amount": {
-            "value": str(amount),
-            "currency": "RUB"
-        },
-        "confirmation": {
-            "type": "redirect",
-            "return_url": "https://web.telegram.org/a/#7859098027"
-        },
-        "capture": True,
-        "description": description
-    }
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payment_data) as response:
-            if response.status == 200:
-                payment_response = await response.json()
-                confirmation_url = payment_response.get('confirmation', {}).get('confirmation_url')
-                if confirmation_url:
-                    return {
-                        'confirmation_url': confirmation_url  # Возвращаем ссылку на страницу подтверждения
-                    }
-                else:
-                    raise HTTPException(status_code=400, detail="No confirmation URL found")
-            else:
-                raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {await response.text()}")
-
 @app.post("/pay")
 async def pay(request: PaymentRequest, db: Session = Depends(get_db)):
     """Инициализация платежа."""
@@ -70,10 +39,50 @@ async def pay(request: PaymentRequest, db: Session = Depends(get_db)):
     
     # Создание платежа в YooKassa
     try:
-        payment_response = await create_payment(request.amount, request.description)
+        payment_response = await create_payment(request.amount, request.description, request.telegram_id)
         return payment_response
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
+
+
+async def create_payment(amount: float, description: str, telegram_id: str):
+    """Создание платежа в YooKassa."""
+    url = "https://api.yookassa.ru/v3/payments"
+    headers = {
+        "Authorization": f"Bearer {YOO_KASSA_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    payment_data = {
+        "amount": {
+            "value": f"{amount:.2f}",  # Форматируем сумму с двумя знаками после запятой
+            "currency": "RUB"
+        },
+        "confirmation": {
+            "type": "redirect",
+            "return_url": "https://web.telegram.org/a/#7859098027"
+        },
+        "capture": True,
+        "description": description,
+        "metadata": {
+            "telegram_id": telegram_id  # Добавляем ID пользователя для дальнейшей идентификации
+        }
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payment_data) as response:
+            if response.status == 200:
+                payment_response = await response.json()
+                confirmation_url = payment_response.get('confirmation', {}).get('confirmation_url')
+                if confirmation_url:
+                    return {
+                        'confirmation': {
+                            'confirmation_url': confirmation_url  # Возвращаем ссылку на страницу подтверждения
+                        }
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail="No confirmation URL found")
+            else:
+                raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {await response.text()}")
+
 
 @app.post("/payment_notification")
 async def payment_notification(request: Request, db: Session = Depends(get_db)):
@@ -83,14 +92,14 @@ async def payment_notification(request: Request, db: Session = Depends(get_db)):
     status = data.get("status")
     user_telegram_id = data.get("metadata", {}).get("telegram_id")
 
-    if status == "succeeded":
+    if status == "succeeded" and user_telegram_id:
         user = get_user(db, user_telegram_id)
         if user:
             # Обновление статуса оплаты пользователя
             user.payment_status = "paid"
             db.commit()
 
-            # Выплата рефералу
+            # Выплата рефералу, если он существует
             if user.referrer_id:
                 referrer = get_user(db, user.referrer_id)
                 if referrer:
@@ -102,8 +111,19 @@ async def payment_notification(request: Request, db: Session = Depends(get_db)):
             # Обновление статуса выплаты
             mark_payout_as_notified(db, payment_id)
 
-            return {"message": "Payment processed successfully"}
-    
+            # Отправка уведомления в mahin.py для оповещения пользователя
+            notify_url = f"{MAHIN_URL}/notify_user"
+            notification_data = {
+                "telegram_id": user_telegram_id,
+                "message": "Поздравляем! Ваш платёж прошёл успешно, вы оплатили курс! 🎉"
+            }
+            response = requests.post(notify_url, json=notification_data)
+
+            if response.status_code == 200:
+                return {"message": "Payment processed and user notified successfully"}
+            else:
+                raise HTTPException(status_code=500, detail="Failed to notify user through bot")
+
     raise HTTPException(status_code=400, detail="Payment not processed")
 
 # Database session dependency

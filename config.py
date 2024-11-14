@@ -5,6 +5,7 @@ load_dotenv()  # Загружает переменные окружения из
 
 API_TOKEN = os.getenv("API_TOKEN")
 SERVER_URL = os.getenv("SERVER_URL")
+MAHIN_URL = os.getenv("MAHIN_URL")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///bot_database.db")  # SQLite для локального использования, PostgreSQL для деплоя
 
 GROUP_NAME = os.getenv("GROUP_NAME")  # Убедитесь, что здесь используется @
