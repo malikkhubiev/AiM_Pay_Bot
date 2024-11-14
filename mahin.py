@@ -13,6 +13,7 @@ from config import (
     API_TOKEN,
     COURSE_AMOUNT,
     REFERRAL_AMOUNT,
+    SERVER_URL,
     GROUP_ID,
     TAX_INFO_IMG_URL,
     EARN_NEW_CLIENTS_VIDEO_URL,
@@ -27,11 +28,6 @@ from database import (
     Payout,
 )
 import requests
-import uvicorn
-from fastapi import FastAPI
-
-API_URL = "https://aim-pay-bot.onrender.com"  # Адрес API FastAPI
-
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
@@ -215,7 +211,7 @@ async def process_payment(message: types.Message):
             "description": description,
             "telegram_id": telegram_id
         }
-        response = requests.post(API_URL + "/pay", json=payment_data)  # URL вашего FastAPI сервера
+        response = requests.post(SERVER_URL + "/pay", json=payment_data)  # URL вашего FastAPI сервера
         
         if response.status_code == 200:
             payment_response = response.json()
