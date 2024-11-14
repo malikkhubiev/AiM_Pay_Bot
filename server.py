@@ -10,6 +10,7 @@ from config import (
     MAHIN_URL,
     YOO_KASSA_SHOP_ID
 )
+import logging
 import os
 import aiohttp
 import uvicorn
@@ -30,20 +31,28 @@ class PaymentRequest(BaseModel):
     description: str
     telegram_id: str
 
+# Настроим логирование
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @app.post("/pay")
 async def pay(request: PaymentRequest, db: Session = Depends(get_db)):
     """Инициализация платежа."""
+    logger.info("Инициализация платежа для пользователя с Telegram ID: %s", request.telegram_id)
+
     user = get_user(db, request.telegram_id)
     if not user:
+        logger.warning("Пользователь с Telegram ID %s не найден.", request.telegram_id)
         raise HTTPException(status_code=400, detail="User not found")
-    
+
     # Создание платежа в YooKassa
     try:
         payment_response = await create_payment(request.amount, request.description, request.telegram_id)
+        logger.info("Платеж успешно создан для пользователя с Telegram ID %s", request.telegram_id)
         return payment_response
     except HTTPException as e:
+        logger.error("Ошибка при создании платежа для пользователя с Telegram ID %s: %s", request.telegram_id, e.detail)
         raise HTTPException(status_code=e.status_code, detail=e.detail)
-
 
 async def create_payment(amount: float, description: str, telegram_id: str):
     """Создание платежа в YooKassa."""
@@ -67,22 +76,28 @@ async def create_payment(amount: float, description: str, telegram_id: str):
             "telegram_id": telegram_id  # Добавляем ID пользователя для дальнейшей идентификации
         }
     }
+
+    logger.info("Отправка запроса на создание платежа в YooKassa для пользователя с Telegram ID: %s", telegram_id)
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, json=payment_data) as response:
             if response.status == 200:
                 payment_response = await response.json()
                 confirmation_url = payment_response.get('confirmation', {}).get('confirmation_url')
                 if confirmation_url:
+                    logger.info("Платеж успешно создан. Confirmation URL: %s", confirmation_url)
                     return {
                         'confirmation': {
                             'confirmation_url': confirmation_url  # Возвращаем ссылку на страницу подтверждения
                         }
                     }
                 else:
+                    logger.error("Ошибка: Confirmation URL не найден в ответе от YooKassa.")
                     raise HTTPException(status_code=400, detail="No confirmation URL found")
             else:
-                raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {await response.text()}")
-
+                error_text = await response.text()
+                logger.error("Ошибка при создании платежа. Код ответа: %s, Текст ошибки: %s", response.status, error_text)
+                raise HTTPException(status_code=response.status, detail=f"Failed to create payment: {error_text}")
+            
 @app.post("/payment_notification")
 async def payment_notification(request: Request, db: Session = Depends(get_db)):
     """Обработка уведомления о платеже от YooKassa."""
