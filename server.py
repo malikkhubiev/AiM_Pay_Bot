@@ -77,6 +77,7 @@ async def create_payment(amount: float, description: str, telegram_id: str):
         }
     }
 
+    logger.info(headers["Authorization"])
     logger.info("Отправка запроса на создание платежа в YooKassa для пользователя с Telegram ID: %s", telegram_id)
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, json=payment_data) as response:
