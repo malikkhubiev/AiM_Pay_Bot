@@ -36,6 +36,7 @@ Session = sessionmaker(bind=engine)
 
 # Установим базовый уровень логирования
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Применяем nest_asyncio для повторного использования цикла событий
 nest_asyncio.apply()
@@ -195,8 +196,6 @@ async def process_tax_info(callback_query: types.CallbackQuery):
 <i>Пока вы платите налоги, вы защищаете себя и делаете реферальные выплаты законными.</i>
 """
     await callback_query.message.answer(info_text, parse_mode=ParseMode.HTML)
-
-logger = logging.getLogger(__name__)
 
 @dp.message_handler(commands=['pay'])
 async def process_payment(message: types.Message):
