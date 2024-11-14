@@ -114,12 +114,14 @@ async def send_welcome(message: types.Message):
     # Проверка, есть ли хотя бы один реферал у пользователя
     referral_exists = session.query(Referral).filter_by(referrer_id=user.id).first() if user else None
     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
+    # Включить позже, а сверху выключить
     # if referral_exists:
     #     # Кнопка для заработка на клиентах, если есть хотя бы один реферал
     #     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах", callback_data='earn_new_clients'))
     # else:
     #     # Кнопка, если пользователь еще не оплатил курс
     #     keyboard.add(InlineKeyboardButton("Заработать на новых клиентах (нужно оплатить курс)", callback_data='earn_new_clients_disabled'))
+    # Включить позже
 
     # Отправка видео с приветствием и меню
     await bot.send_video(
@@ -216,10 +218,12 @@ async def process_payment(message: types.Message):
 
         # Проверка, что у пользователя уже есть выплата с подтвержденным статусом
         existing_payout = session.query(Payout).filter_by(user_id=user.id, notified=False).first()
-        if existing_payout:
-            logger.info("Пользователь с Telegram ID %s уже оплатил курс.", telegram_id)
-            await message.answer("Вы уже оплатили курс.")
-            return
+        # Включить позже
+        # if existing_payout:
+        #     logger.info("Пользователь с Telegram ID %s уже оплатил курс.", telegram_id)
+        #     await message.answer("Вы уже оплатили курс.")
+        #     return
+        # Включить позже
 
         # Отправка запроса на сервер для создания платежа
         payment_data = {
