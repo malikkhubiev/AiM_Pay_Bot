@@ -59,9 +59,9 @@ def web_server():
         return web.json_response({"error": "Invalid data"}, status=400)
 
     app = web.Application()
-    app.router.add_head("/", handle) # for UptimeRobot
-    app.router.add_get("/", handle) # for me
-    app.router.add_post("/notify_user", notify_user) # for success notifying
+    app.router.add_route("HEAD", "/", handle)
+    app.router.add_route("GET", "/", handle)
+    app.router.add_post("/notify_user", notify_user)
     return app
 
 async def on_start_polling():
