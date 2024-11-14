@@ -20,9 +20,20 @@ from database import get_db, create_payout, get_user, mark_payout_as_notified, c
 
 load_dotenv()
 
+print("YOO_KASSA_SHOP_ID:", os.getenv("YOO_KASSA_SHOP_ID"))
+print("YOOKASSA_SECRET_KEY:", os.getenv("YOOKASSA_SECRET_KEY"))
+
 # Настройка идентификатора магазина и секретного ключа
 Configuration.account_id = YOO_KASSA_SHOP_ID
 Configuration.secret_key = YOOKASSA_SECRET_KEY
+
+# Настроим логирование
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Логируем, чтобы проверить, что переменные установлены
+logger.info("Account ID: %s", Configuration.account_id)
+logger.info("Secret Key: %s", "SET" if Configuration.secret_key else "NOT SET")
 
 # FastAPI application
 app = FastAPI()
@@ -36,10 +47,6 @@ class PaymentRequest(BaseModel):
     amount: float
     description: str
     telegram_id: str
-
-# Настроим логирование
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 @app.post("/pay")
 async def pay(request: PaymentRequest, db: Session = Depends(get_db)):
