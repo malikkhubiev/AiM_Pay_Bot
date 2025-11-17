@@ -1,5 +1,7 @@
 # AiM Pay Bot Platform
 
+![logo](https://malikkhubiev.github.io/pngs/qrB.svg)
+
 ![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat&logo=python) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat&logo=fastapi) ![Aiogram](https://img.shields.io/badge/Aiogram-3.x-2CA5E0?style=flat&logo=telegram) ![YooKassa](https://img.shields.io/badge/YooKassa-Live-blueviolet?style=flat) ![Plotly](https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?style=flat) ![License](https://img.shields.io/badge/Stack-Modular-green?style=flat)
 
 > Платформа сочетает Telegram-бота на Aiogram и микросервис на FastAPI, закрывая полный цикл: лидогенерация, оплата, реферальные выплаты, сертификация, CRM и аналітика — всё «из коробки».
@@ -277,6 +279,7 @@ cd AiM_Pay_Bot_server && python -c "from database import initialize_database; in
 uvicorn server:app --reload --port 8000
 python AiM_Pay_Bot_bot/mahin.py  # polling
 ```
+
 
 
 
