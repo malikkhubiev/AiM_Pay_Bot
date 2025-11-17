@@ -15,6 +15,15 @@
   <img src="https://img.shields.io/badge/Stack-Modular-green?style=for-the-badge" alt="Stack">
 </p>
 
+<p align="center">
+  <a href="https://github.com/malikkhubiev/AiM_Pay_Bot_bot">
+    <img src="https://img.shields.io/badge/Клиент-8B5CF6?style=for-the-badge&logo=github&logoColor=white" alt="Клиент">
+  </a>
+  <a href="https://github.com/malikkhubiev/AiM_Pay_Bot_server">
+    <img src="https://img.shields.io/badge/Сервер-A855F7?style=for-the-badge&logo=github&logoColor=white" alt="Сервер">
+  </a>
+</p>
+
 > Платформа сочетает Telegram-бота на Aiogram и микросервис на FastAPI, закрывая полный цикл: лидогенерация, оплата, реферальные выплаты, сертификация, CRM и аналітика — всё «из коробки».
 
 - Мгновенная регистрация обработчиков через `button_handlers` и middleware для anti-spam.
@@ -290,6 +299,7 @@ cd AiM_Pay_Bot_server && python -c "from database import initialize_database; in
 uvicorn server:app --reload --port 8000
 python AiM_Pay_Bot_bot/mahin.py  # polling
 ```
+
 
 
 
