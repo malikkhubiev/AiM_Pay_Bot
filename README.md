@@ -20,8 +20,6 @@
 5. [CRM, лиды и отчеты](#crm-лиды-и-отчеты)
 6. [Безопасность](#безопасность)
 7. [Стек технологий](#стек-технологий)
-8. [Быстрый старт](#быстрый-старт)
-9. [FAQ / Roadmap](#faq--roadmap)
 
 ---
 
@@ -279,5 +277,6 @@ cd AiM_Pay_Bot_server && python -c "from database import initialize_database; in
 uvicorn server:app --reload --port 8000
 python AiM_Pay_Bot_bot/mahin.py  # polling
 ```
+
 
 
