@@ -1,8 +1,19 @@
-# AiM Pay Bot Platform
+<h1 align="center">
+  AiM Pay Bot Platform
+</h1>
 
-![logo](https://malikkhubiev.github.io/pngs/qrB.svg)
+<p align="center">
+  <img src="https://malikkhubiev.github.io/pngs/qrB.svg" width="140" alt="AiM Course logo" />
+</p>
 
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat&logo=python) ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat&logo=fastapi) ![Aiogram](https://img.shields.io/badge/Aiogram-3.x-2CA5E0?style=flat&logo=telegram) ![YooKassa](https://img.shields.io/badge/YooKassa-Live-blueviolet?style=flat) ![Plotly](https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?style=flat) ![License](https://img.shields.io/badge/Stack-Modular-green?style=flat)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Aiogram-3.x-2CA5E0?style=for-the-badge&logo=telegram" alt="Aiogram">
+  <img src="https://img.shields.io/badge/YooKassa-Live-blueviolet?style=for-the-badge" alt="YooKassa">
+  <img src="https://img.shields.io/badge/Plotly-Interactive%20Charts-3F4F75?style=for-the-badge" alt="Plotly">
+  <img src="https://img.shields.io/badge/Stack-Modular-green?style=for-the-badge" alt="Stack">
+</p>
 
 > Платформа сочетает Telegram-бота на Aiogram и микросервис на FastAPI, закрывая полный цикл: лидогенерация, оплата, реферальные выплаты, сертификация, CRM и аналітика — всё «из коробки».
 
@@ -279,6 +290,7 @@ cd AiM_Pay_Bot_server && python -c "from database import initialize_database; in
 uvicorn server:app --reload --port 8000
 python AiM_Pay_Bot_bot/mahin.py  # polling
 ```
+
 
 
 
