@@ -29,24 +29,27 @@
 
 ```mermaid
 flowchart LR
-  subgraph Telegram Bot (Aiogram)
+  subgraph Telegram_Bot_Aiogram
     UI[Inline Keyboards] --> H[Handlers & FSM]
-    H --> U(Utils/httpx)
+    H --> U[Utils/httpx]
     H --> L[Loader/Bot+Dp]
   end
-  subgraph FastAPI Server
+  
+  subgraph FastAPI_Server
     API[FastAPI routers] --> DB[(SQLite + SQLAlchemy)]
     API --> K[YooKassa SDK]
     API --> P[Plotly/Pandas]
     API --> E[Resend Email]
   end
-  subgraph Landing & CRM
-    Landing[Next/Static Landing] --> API
-    CRM[FormWarm SPA] --> API
+  
+  subgraph Landing_CRM
+    Landing[Static Landing] --> API
+    CRM[FormWarm] --> API
   end
-  Bot <-->|"X-Secret-Code"| Server
-  Server -->|Webhook| YooKassa
-  API -->|Webhook| Instagram/WA
+  
+  L <-->|X-Secret-Code| API
+  API -->|Webhook| YK[YooKassa]
+  API -->|Webhook| SM[Instagram]
 ```
 
 Ключевые принципы:
@@ -276,26 +279,5 @@ cd AiM_Pay_Bot_server && python -c "from database import initialize_database; in
 uvicorn server:app --reload --port 8000
 python AiM_Pay_Bot_bot/mahin.py  # polling
 ```
-
-> **Продакшен**: вынесите API в отдельный сервис (Docker/Render), бота — как worker. YooKassa вебхуки должны попадать напрямую на публичный `/payment_notification`.
-
----
-
-## FAQ / Roadmap
-
-- **Как добавить новый сценарий?** — пишем handler в `handlers.py`, регистрируем ID в `button_handlers.callback_handlers`.
-- **Где править отчёты?** — `api/base.py` содержит весь reporting; новые Excel листы / Plotly графики добавляются через pandas/plotly helpers.
-- **Можно ли заменить SQLite?** — достаточно поменять `DATABASE_URL` в `database.py` (PostgreSQL) и пересоздать модели.
-
-**Идеи**:
-
-- Telegram mini-app для CRM, reuse `/form_warm` API.
-- Webhook-режим бота (ngrok/Cloudflare Tunnel) вместо polling.
-- Нативные payouts через YooKassa `Payouts` (доработка `get_pending_payout`).
-- Observability: Prometheus metrics + structured logging.
-
----
-
-> Если хотите обсудить интеграцию, архитектурный аудит или заказную фичу — смело пишите. Этот стек уже умеет «всё и сразу», осталось только подружить его с вашим next big thing 🚀
 
 
